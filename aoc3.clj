@@ -26,10 +26,9 @@
         x (range (:left claim) (+ (:left claim) (:width claim)))]
     [y x]))
 
-(defn mark-claim [cloth claim & {:keys [mark]
-                                 :or {mark inc}}]
+(defn mark-claim [cloth claim]
   (reduce (fn [c [y x]]
-            (update-in c [y x] mark))
+            (update-in c [y x] inc))
           cloth
           (claim-points claim)))
 
