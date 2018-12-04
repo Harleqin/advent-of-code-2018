@@ -17,18 +17,16 @@
        (line-seq (io/reader filename))))
 
 (defn make-cloth [initial-element]
-  (vec (repeat 1000
-               (vec (repeat 1000
-                            initial-element)))))
+  (vec (repeat (* 1000 1000) initial-element)))
 
 (defn claim-points [claim]
   (for [y (range (:top claim) (+ (:top claim) (:height claim)))
         x (range (:left claim) (+ (:left claim) (:width claim)))]
-    [y x]))
+    (+ (* 1000 y) x)))
 
 (defn mark-claim [cloth claim]
-  (reduce (fn [c [y x]]
-            (update-in c [y x] inc))
+  (reduce (fn [c p]
+            (update c p inc))
           cloth
           (claim-points claim)))
 
@@ -44,7 +42,6 @@
   ([claims]
    (let [marked-cloth (marked-cloth claims)]
      (->> marked-cloth
-          flatten
           (filter #(> % 1))
           count))))
 
@@ -54,8 +51,8 @@
   ([claims]
    (let [marked-cloth (marked-cloth claims)]
     (loop [[c & cs] claims]
-      (if (every? (fn [[y x]]
-                    (= 1 (get-in marked-cloth [y x])))
+      (if (every? (fn [p]
+                    (= 1 (get marked-cloth p)))
                   (claim-points c))
         (:id c)
         (recur cs))))))
