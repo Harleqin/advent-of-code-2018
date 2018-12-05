@@ -4,7 +4,7 @@
   :author "Svante v. Erichsen <svante.v.erichsen@web.de>"
   :license "public domain/CC0"
   :serial t
-  :depends-on ("alexandria" "arrows" "cl-ppcre" "drakma")
+  :depends-on ("alexandria" "arrows" "cl-ppcre" "drakma" "local-time")
   :components ((:file "package")
                (:file "util")
                (:file "1")
