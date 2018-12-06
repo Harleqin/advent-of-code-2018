@@ -4,4 +4,5 @@
   (:use #:cl
         #:alexandria
         #:arrows
-        #:cl-ppcre))
+        #:cl-ppcre
+        #:split-sequence))
