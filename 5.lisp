@@ -1,4 +1,10 @@
-(in-package #:aoc-2018)
+(in-package #:cl-user)
+
+(defpackage #:aoc-2018-5
+  (:use #:cl
+        #:alexandria))
+
+(in-package #:aoc-2018-5)
 
 (defun read-polymer (filename)
   (with-open-file (in filename)

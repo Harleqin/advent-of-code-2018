@@ -1,4 +1,9 @@
-(in-package #:aoc-2018)
+(in-package #:cl-user)
+
+(defpackage #:aoc-2018-2
+  (:use #:cl))
+
+(in-package #:aoc-2018-2)
 
 (defun read-ids (filename)
   (with-open-file (in filename)

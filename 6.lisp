@@ -1,4 +1,12 @@
-(in-package #:aoc-2018)
+(in-package #:cl-user)
+
+(defpackage #:aoc-2018-6
+  (:use #:cl
+        #:alexandria
+        #:arrows
+        #:split-sequence))
+
+(in-package #:aoc-2018-6)
 
 (defstruct cell
   id

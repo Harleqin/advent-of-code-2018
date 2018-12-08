@@ -1,4 +1,11 @@
-(in-package #:aoc-2018)
+(in-package #:cl-user)
+
+(defpackage #:aoc-2018-3
+  (:use #:cl
+        #:arrows
+        #:cl-ppcre))
+
+(in-package #:aoc-2018-3)
 
 (defun aoc3a (&optional (claims (read-claims "3")))
   (let ((cloth (marked-cloth claims)))

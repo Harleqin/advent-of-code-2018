@@ -1,5 +1,11 @@
-(in-package #:aoc-2018)
+(in-package #:cl-user)
 
+(defpackage #:aoc-2018-1
+  (:use #:cl
+        #:alexandria
+        #:aoc-2018))
+
+(in-package #:aoc-2018-1)
 
 (defun aoc1a (&optional (list (read-integers "1")))
   (reduce #'+ list))

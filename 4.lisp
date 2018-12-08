@@ -1,4 +1,12 @@
-(in-package #:aoc-2018)
+(in-package #:cl-user)
+
+(defpackage #:aoc-2018-4
+  (:use #:cl
+        #:alexandria
+        #:arrows
+        #:cl-ppcre))
+
+(in-package #:aoc-2018-4)
 
 (defun read-events (filename)
   (-> (with-open-file (in filename)
