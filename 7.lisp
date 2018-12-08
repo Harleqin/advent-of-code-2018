@@ -1,6 +1,14 @@
-(in-package #:aoc-2018)
+(in-package #:cl-user)
 
-(defun read-deps-7 ()
+(defpackage #:aoc-2018-7
+  (:use #:cl
+        #:alexandria
+        #:arrows
+        #:cl-ppcre))
+
+(in-package #:aoc-2018-7)
+
+(defun read-deps ()
   (with-open-file (in "7")
     (loop :for line := (read-line in nil)
           :while (and line (plusp (length line)))
@@ -12,7 +20,7 @@
       ("Step (.) must be finished before step (.) can begin." string)
     (list a b)))
 
-(defun aoc7a (&optional (deps (read-deps-7)))
+(defun aoc7a (&optional (deps (read-deps)))
   (let ((steps (extract-steps deps))
         (dep-graph (make-dep-graph deps)))
     (coerce (loop :for remaining-steps := steps :then (remove step remaining-steps)
@@ -46,7 +54,7 @@
                    :key (lambda (deps)
                           (set-difference deps steps))))
 
-(defun aoc7b (&optional (deps (read-deps-7)))
+(defun aoc7b (&optional (deps (read-deps)))
   (loop :with finishing-times := (make-hash-table)
         :and steps := (extract-steps deps)
         :for graph := (make-dep-graph deps) :then new-graph
