@@ -1,15 +1,5 @@
 (in-package #:aoc-2018)
 
-(defun read-integers (filename)
-  (with-open-file (in filename)
-    (loop :for line := (read-line in nil)
-          :while line
-          :append (loop :for (i pos) := (multiple-value-list
-                                         (parse-integer line
-                                                        :start (or pos 0)
-                                                        :junk-allowed t))
-                        :while i
-                        :collect i))))
 
 (defun aoc1a (&optional (list (read-integers "1")))
   (reduce #'+ list))
