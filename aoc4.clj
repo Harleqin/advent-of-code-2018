@@ -23,19 +23,72 @@
         (sort-by :time)))
 
 (defn partition-guard-events [events]
-  (reduce (fn [[m last-guard] {:keys [time type guard] :as event}]
-            [(update m
-                     (or guard last-guard)
-                     (fn [old]
-                       (if old
-                         (conj old event)
-                         [event])))
-             (or guard last-guard)])
-          [{} nil]
-          events))
+  (-> (reduce (fn [[m last-guard] {:keys [time type guard] :as event}]
+                (if (= type :begin)
+                  [m guard]
+                  (let [time (.getMinutes time)]
+                    [(update m
+                             last-guard
+                             (fn [old]
+                               (if old
+                                 (conj old time)
+                                 [time])))
+                     last-guard])))
+              [{} nil]
+              events)
+      first))
 
-(defn sleep-sum [events]
-  (->> (partition 2 events)
-       (map (fn [[sleep wake]]
-              (- (.getMinute (:time wake)) (.getMinute (:time sleep)))))
-       (reduce +)))
+(defn sleep-sum [times]
+  (reduce +
+          (map #(apply - (reverse %)) times)))
+
+(defn register-minutes [times]
+  (reduce (fn [minutes [sleep wake]]
+            (reduce (fn [mins i]
+                      (update mins i inc))
+                    minutes
+                    (range sleep wake)))
+          (vec (repeat 60 0))
+          (partition 2 times)))
+
+(defn aoc4a
+  ([]
+   (aoc4a (read-events "4")))
+  ([events]
+   (let [guard-times (partition-guard-events events)
+         best-guard (apply max-key
+                           (fn [guard]
+                             (sleep-sum (partition 2 (guard-times guard))))
+                           (keys guard-times))
+         minutes (register-minutes (guard-times best-guard))
+         best-minute (apply max-key
+                            #(get minutes %)
+                            (range 0 60))]
+     (* best-guard best-minute))))
+
+(defn fmap [f m]
+  (reduce (fn [r [k v]]
+            (assoc r k (f v)))
+          {}
+          m))
+
+(defn aoc4b
+  ([]
+   (aoc4b (read-events "4")))
+  ([events]
+   (let [guard-times (partition-guard-events events)
+
+         guard-minutes (fmap register-minutes guard-times)
+
+         [best-guard best-minute best-intensity]
+         (reduce (fn [[best-guard best-minute best-intensity] [guard minutes]]
+                   (let [best-minute-here (apply max-key
+                                                 #(get minutes %)
+                                                 (range 0 60))
+                         best-intensity-here (get minutes best-minute-here)]
+                     (if (> best-intensity-here best-intensity)
+                       [guard best-minute-here best-intensity-here]
+                       [best-guard best-minute best-intensity])))
+                 [-1 -1 0]
+                 guard-minutes)]
+     (* best-guard best-minute))))
