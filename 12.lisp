@@ -55,13 +55,14 @@
 
 (defun parse-pots (string)
   "Parses a string of #\# and #\. into a bitarray represented as an integer.
-The first character becomes byte 0 in that integer, i. e. the least significant
+The first character becomes bit 0 in that integer, i. e. the least significant
 bit."
   (loop :for c :across string
-        :for bit := (if (char= c #\#) 1 0)
+        :for bit := (ecase c
+                      (#\# 1)
+                      (#\. 0))
         :for i :upfrom 0
-        :for pots := bit :then (+ (ash bit i) pots)
-        :finally (return pots)))
+        :sum (ash bit i)))
 
 (defun truncate-zeroes (bin)
   "Removes all consecutive zeroes from the least significant end of integer BIN.
@@ -71,30 +72,31 @@ Returns the truncated number and the count of removed zeroes."
       (let ((offset (loop :for bit :upfrom 0
                           :until (logbitp bit bin)
                           :finally (return bit))))
-        (values (ash bin (* offset -1))
+        (values (ash bin (- offset))
                 offset))))
 
 (defun read-rules ()
   (with-open-file (in "12")
     (loop :repeat 2 :do (read-line in))
-    (-> (loop :for line := (read-line in nil)
-              :while line
-              :collect (parse-rule line))
-        (alist-hash-table))))
+    (loop :for line := (read-line in nil)
+          :while line
+          :sum (destructuring-bind (i . b) (parse-rule line)
+                 (ash b i)))))
 
 (defun parse-rule (string)
   (cons (parse-pots (subseq string 0 5))
-        (if (char= (char string 9)
-                   #\#)
-            1
-            0)))
+        ;; Yes, we could use (ldb (byte 1 0) (char-code (char string 9))) here,
+        ;; but this parsing is not relevant for performance, so let's be obvious
+        ;; and safe.
+        (ecase (char string 9)
+          (#\# 1)
+          (#\. 0))))
 
 (defun next-gen (state rules)
   (loop :for pots := (ash (state-pots state) 4) :then (ash pots -1)
         :for pattern := (ldb (byte 5 0) pots)
         :for i :upfrom 0
-        :for next-pots := (gethash pattern rules 0)
-          :then (+ (ash (gethash pattern rules 0) i) next-pots)
+        :sum (ash (ldb (byte 1 pattern) rules) i) :into next-pots
         :until (zerop pots)
         :finally (return (multiple-value-bind (new-pots offset)
                              (truncate-zeroes next-pots)
