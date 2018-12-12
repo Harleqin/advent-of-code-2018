@@ -2,6 +2,7 @@
 
 (defpackage #:aoc-2018-11
   (:use #:cl
+        #:aoc-2018
         #:arrows))
 
 (in-package #:aoc-2018-11)
