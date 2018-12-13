@@ -19,9 +19,23 @@
   (generations-sum 20 initial-state rules))
 
 (defun generations-sum (n initial-state rules)
-  (loop :repeat n
+  (loop :for i :below n
+        :for last-state := nil :then state
         :for state := (next-gen initial-state rules)
           :then (next-gen state rules)
+        ;; OK, so playing with several big n reveals that at some point, the
+        ;; pattern becomes a steady state with only a difference in offset of 1.
+        ;; I can't prove that this must be so (it seems to me that this puts
+        ;; constraints on the possible rulesets), but I'll use it.
+        :when (and last-state
+                   (= (state-pots last-state) (state-pots state)))
+          :do (setf state
+                    (make-state :offset (+ (state-offset state)
+                                           (* (- (state-offset state)
+                                                 (state-offset last-state))
+                                              (- n i 1)))
+                                :pots (state-pots state)))
+              (loop-finish)
         :finally (return (values (sum-pots state)
                                  state))))
 
@@ -92,6 +106,7 @@ Returns the truncated number and the count of removed zeroes."
           (#\# 1)
           (#\. 0))))
 
+;; TODO: you can assemble multi-bit rules using next-gen
 (defun next-gen (state rules)
   (loop :for pots := (ash (state-pots state) 4) :then (ash pots -1)
         :for pattern := (ldb (byte 5 0) pots)
@@ -108,4 +123,4 @@ Returns the truncated number and the count of removed zeroes."
 (defun aoc12b (&optional
                  (initial-state (read-initial-state))
                  (rules (read-rules)))
-  (generations-sum 50000000 initial-state rules))
+  (generations-sum 50000000000 initial-state rules))
