@@ -6,7 +6,8 @@
         #:arrows
         #:cl-ppcre
         #:split-sequence)
-  (:export #:download
+  (:export #:dovector
+           #:download
            #:read-integers))
 
 (in-package #:aoc-2018)
@@ -31,3 +32,9 @@
                                                         :junk-allowed t))
                         :while i
                         :collect i))))
+
+(defmacro dovector ((var vector &optional return) &body body)
+  `(loop :for ,var :across ,vector
+         :do (tagbody
+                ,@body)
+         :finally (return ,return)))
