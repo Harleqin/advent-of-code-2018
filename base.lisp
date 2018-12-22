@@ -5,9 +5,12 @@
         #:alexandria
         #:arrows
         #:cl-ppcre
+        #:for
         #:split-sequence)
-  (:export #:dovector
+  (:export #:array-flat-view
+           #:dovector
            #:download
+           #:frequencies
            #:read-integers))
 
 (in-package #:aoc-2018)
@@ -38,3 +41,14 @@
          :do (tagbody
                 ,@body)
          :finally (return ,return)))
+
+(defun array-flat-view (array)
+  (make-array (array-total-size array)
+              :element-type (array-element-type array)
+              :displaced-to array))
+
+(defun frequencies (sequence &key (test #'eql))
+  (let ((fs (make-hash-table :test test)))
+    (for ((x over sequence))
+      (incf (gethash x fs 0)))
+    fs))

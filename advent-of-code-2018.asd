@@ -8,10 +8,14 @@
                "arrows"
                "cl-ppcre"
                "drakma"
+               "for"
+               "let-plus"
                "local-time"
                "minheap"
+               "opticl"
                "split-sequence")
   :components ((:file "base")
+               (:file "cookie-jar")
                (:file "1")
                (:file "2")
                (:file "3")
@@ -26,4 +30,6 @@
                (:file "12")
                (:file "13")
                (:file "14")
-               (:file "15")))
+               (:file "15")
+               (:file "16")
+               (:file "17")))
