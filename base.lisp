@@ -10,6 +10,7 @@
   (:export #:array-flat-view
            #:dovector
            #:download
+           #:factorize
            #:frequencies
            #:read-integers))
 
@@ -52,3 +53,17 @@
     (for ((x over sequence))
       (incf (gethash x fs 0)))
     fs))
+
+(defun factorize (n)
+  (let ((factors ()))
+    (loop :while (evenp n)
+          :do (push 2 factors)
+              (setf n (/ n 2)))
+    (loop :with f := 3
+          :while (and (> n 1)
+                      (<= f n))
+          :do (if (zerop (mod n f))
+                  (progn (push f factors)
+                         (setf n (/ n f)))
+                  (incf f 2)))
+    factors))
