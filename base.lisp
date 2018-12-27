@@ -8,6 +8,7 @@
         #:for
         #:split-sequence)
   (:export #:array-flat-view
+           #:defenum
            #:dovector
            #:download
            #:factorize
@@ -67,3 +68,10 @@
                          (setf n (/ n f)))
                   (incf f 2)))
     factors))
+
+(defmacro defenum (&body elements)
+  `(progn
+     ,@(mapcar (lambda (e i)
+                 `(defconstant ,e ,i))
+               elements
+               (iota (length elements)))))
