@@ -14,7 +14,8 @@
                "minheap"
                "opticl"
                "split-sequence")
-  :components ((:file "base")
+  :components ((:file "package")
+               (:file "base")
                (:file "cookie-jar")
                (:file "1")
                (:file "2")
@@ -32,4 +33,10 @@
                (:file "14")
                (:file "15")
                (:file "16")
-               (:file "17")))
+               (:file "17")
+               (:file "18")
+               (:file "19")
+               (:file "20")
+               (:file "21")
+               (:file "22")
+               (:file "23")))

@@ -55,33 +55,67 @@
 (defvar *adjacency-matrix*)
 
 (defstruct cluster
-  bots
-  candidates)
+  (bots 0 :type integer)
+  (candidates 0 :type integer))
 
 (defun aoc23b (&optional (*nanobots* (read-nanobots-from-file)))
-  (let ((*adjacency-matrix* (adjacency-matrix *nanobots*)))
-    ;; A cluster is represented as a bit field of nanobots in this cluster.
-    (loop :for clusters := (loop :for i :below (length *nanobots*)
-                                 :collect (ash 1 i))
-            :then new-clusters
-          :for new-clusters := (mapcan #'extend-cluster clusters)
-          :while new-clusters
-          :finally (return clusters))))
+  (let* ((*adjacency-matrix* (adjacency-matrix *nanobots*))
+         ;; A cluster is represented as a bit field of nanobots in this cluster.
+         #+debug
+         (largest-clusters
+           (loop :for clusters
+                   := (loop :for i :below (length *nanobots*)
+                            :collect (create-cluster (ash 1 i)))
+                     :then new-clusters
+                 :for new-clusters := (mapcan #'extend-cluster clusters)
+                 :while new-clusters
+                 :finally (return clusters))))
+    (visualize-adjacency-matrix *adjacency-matrix*)))
+
+(defun visualize-adjacency-matrix (m)
+  (let ((image (opticl:make-8-bit-gray-image 1000 1000 :initial-element 0)))
+    (dotimes (row 1000)
+      (dotimes (col 1000)
+        (setf (opticl:pixel image row col)
+              (* 255 (ldb (byte 1 col) (aref m row))))))
+    (opticl:write-png-file "/tmp/23.png" image)))
 
 (defun extend-cluster (cluster)
-  )
+  (let+ (((&structure cluster- bots candidates) cluster))
+    (loop :for i :below (integer-length candidates)
+          :for next-candidates
+            := (when (logbitp i candidates)
+                 (logand candidates
+                         (aref *adjacency-matrix* i)))
+          :when next-candidates
+            :collect (make-cluster :bots (logior bots (ash 1 i))
+                                   :candidates next-candidates))))
 
-;; TODO: make this a vector of bitfield integers
+(defun create-cluster (bot-indicator)
+  (make-cluster :bots bot-indicator
+                :candidates (candidate-mask bot-indicator)))
+
+(defun candidate-mask (bots-bitfield)
+  "Returns a bitfield integer indicating every bot not indicated by
+BOTS-BITFIELD whose radius overlaps every bot in BOTS-BITFIELD."
+  ;; TODO: das geht schneller -> nur die 1en ansehen
+  (let ((adjacencies (loop :for i :below (integer-length bots-bitfield)
+                           :when (logbitp i bots-bitfield)
+                             :collect (aref *adjacency-matrix* i))))
+    (reduce #'logand adjacencies)))
+
 (defun adjacency-matrix (bots)
-  (let ((m (make-array (list (length bots) (length bots))
-                       :element-type 'bit
-                       :initial-element 0)))
-    (loop :for a :across bots
-          :for i :upfrom 0
-          :do (loop :for b :across bots
+  (map-into (make-array (length bots)
+                        :element-type 'integer)
+            (lambda (bot i)
+              (loop :for other :across bots
                     :for j :upfrom 0
-                    :do (when (and (/= i j)
-                                   (<= (manhattan-distance a b)
-                                       (+ (nanobot-radius a)
-                                          (nanobot-radius b))))
-                          (setf (aref m i j) 1))))))
+                    :for bit := (if (and (/= i j)
+                                         (<= (manhattan-distance bot other)
+                                             (+ (nanobot-radius bot)
+                                                (nanobot-radius other))))
+                                    1
+                                    0)
+                    :sum (ash bit j)))
+            bots
+            (iota (length bots))))
