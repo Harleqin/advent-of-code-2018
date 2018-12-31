@@ -95,30 +95,42 @@
             (assert (= (hash-table-count reduced-overlap-counts) 1))
             (assert (= (length bots) octahedron-count))))
          ;; The full overlap region must be convex, by the way.
-         (some-full-overlap-pos
-          (loop :for pos := (weighted-middle bots)
-                  :then (step-pos pos
-                                  (weighted-middle missing)
-                                  (reduce #'max distances))
-                :for (missing distances)
-                  := (loop :for bot :in bots
-                           :for missing-distance
-                             := (- (manhattan-distance pos bot)
-                                   (nanobot-radius bot))
-                           :when (plusp missing-distance)
-                             :collect bot :into missing
-                             :and :collect missing-distance :into distances
-                           :finally (return (list missing distances)))
-                :until (endp missing)
-                :do (print (list :distances distances
-                                 :length (length distances)))
-                    (break)
-                :finally (return pos))))
-    some-full-overlap-pos))
+         (core (reduce #'intersect
+                       (mapcar #'bounding-box bots))))
+    (print (bounding-box (first bots)))
+    (print (bounding-box (second bots)))
+    (print (intersect (bounding-box (first bots))
+                      (bounding-box (second bots))))
+    (print core)))
 
-(defun step-pos (start goal distance)
-  (pos-round (pos+ start
-                   (pos* distance (normalize (pos- goal start))))))
+(defun bounding-box (bot)
+  "A list of two positions (pos-min pos-max) defining the axis-aligned bounding
+box of the bot's range."
+  (let ((box (map 'list
+                  (lambda (dir)
+                    (map 'vector
+                         (rcurry dir (nanobot-radius bot))
+                         (nanobot-pos bot)))
+                  (list #'- #'+))))
+    (assert (= (length box) 2))
+    (assert (apply #'every #'< box))
+    box))
+
+(defun intersect (box-a box-b)
+  (let* ((result (map 'list
+                      (lambda (opt a b)
+                        (map 'vector opt a b))
+                      (list #'max #'min)
+                      box-a
+                      box-b))
+         (v (volume result)))
+    (assert (<= v (volume box-a)))
+    (assert (<= v (volume box-b)))
+    result))
+
+(defun volume (box)
+  (abs (reduce #'*
+               (apply #'map 'vector #'- box))))
 
 (defun adjacency-matrix (bots)
   (map-into (make-array (length bots)
