@@ -94,43 +94,49 @@
             (assert (> (hash-table-count overlap-counts) 1))
             (assert (= (hash-table-count reduced-overlap-counts) 1))
             (assert (= (length bots) octahedron-count))))
-         ;; The full overlap region must be convex, by the way.
          (core (reduce #'intersect
-                       (mapcar #'bounding-box bots))))
-    (print (bounding-box (first bots)))
-    (print (bounding-box (second bots)))
-    (print (intersect (bounding-box (first bots))
-                      (bounding-box (second bots))))
-    (print core)))
+                       (mapcar #'bounding-planes bots))))
+    ;; The origin-facing faces have a negative coefficient, and the one in the
+    ;; right octant is the one with the most negative one.
+    (- (reduce #'min core))))
 
-(defun bounding-box (bot)
-  "A list of two positions (pos-min pos-max) defining the axis-aligned bounding
-box of the bot's range."
-  (let ((box (map 'list
-                  (lambda (dir)
-                    (map 'vector
-                         (rcurry dir (nanobot-radius bot))
-                         (nanobot-pos bot)))
-                  (list #'- #'+))))
-    (assert (= (length box) 2))
-    (assert (apply #'every #'< box))
-    box))
+(defparameter *faces*
+  #(#(+1/3 +1/3 +1/3) #(-1/3 -1/3 -1/3)
+    #(+1/3 -1/3 +1/3) #(-1/3 +1/3 -1/3)
+    #(-1/3 -1/3 +1/3) #(+1/3 +1/3 -1/3)
+    #(-1/3 +1/3 +1/3) #(+1/3 -1/3 -1/3))
+  "The faces of an axis aligned octahedron.  I choose (1/3 1/3 1/3) so that it
+directly corresponds to the manhattan distance, if it is in the right octant.")
 
-(defun intersect (box-a box-b)
-  (let* ((result (map 'list
-                      (lambda (opt a b)
-                        (map 'vector opt a b))
-                      (list #'max #'min)
-                      box-a
-                      box-b))
-         (v (volume result)))
-    (assert (<= v (volume box-a)))
-    (assert (<= v (volume box-b)))
-    result))
+(defun bounding-planes (bot)
+  "A vector of eight numbers, corresponding to the plane distances in the eight
+directions of the /faces/ of the octahedron.  This format can describe the
+regular range octahedrons of each individual nanobot as well as distorted ones
+representing their intersection."
+  #+herleitung
+  (block herleitung
+    (= (+ (* d1 x) (* d2 y) (* d3 z))
+       (+ (* d1 p1) (* d2 p2) (* d3 p3)))
+    ;; Einsetzen der Geraden
+    (= (+ (* d1 d1 md) (* d2 d2 md) (* d3 d3 md))
+       (+ (* d1 p1) (* d2 p2) (* d3 p3)))
+    ;; md ausklammern
+    (= (* md (+ (* d1 d1) (* d2 d2) (* d3 d3)))
+       (+ (* d1 p1) (* d2 p2) (* d3 p3)))
+    ;; md isolieren
+    (= md
+       (/ (+ (* d1 p1) (* d2 p2) (* d3 p3))
+          (+ (* d1 d1) (* d2 d2) (* d3 d3))))) ; (* 3 (* 1/3 1/3)) ; 1/3
+  (let+ (((&structure nanobot- pos radius) bot))
+    (map 'vector
+         (lambda (face)
+           (+ (* 3 (reduce #'+ (map 'vector #'* face pos)))
+              radius))
+         *faces*)))
 
-(defun volume (box)
-  (abs (reduce #'*
-               (apply #'map 'vector #'- box))))
+(defun intersect (oh-a oh-b)
+  "Intersects two irregular octahedrons."
+  (map 'vector #'min oh-a oh-b))
 
 (defun adjacency-matrix (bots)
   (map-into (make-array (length bots)
