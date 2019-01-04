@@ -13,4 +13,6 @@
            #:download
            #:factorize
            #:frequencies
-           #:read-integers))
+           #:read-integers
+           #:sort-by
+           #:strcat))

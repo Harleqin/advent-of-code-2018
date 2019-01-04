@@ -58,3 +58,31 @@
                  `(defconstant ,e ,i))
                elements
                (iota (length elements)))))
+
+(defmacro sort-by (sequence arglist &rest more-arglists)
+  "Sorts a sequence by several attributes, given in ARGLISTS.  ARGLISTS are
+triplets of comparator, key function, and equality test.  For each comparison of
+the sort, each triplet is tried in sequence, until the key function of one gives
+results not equal under the equality test; then, the result of the comparison is
+the result of the comparator to the results of that key function.  The equality
+test of the last arglist is ignored."
+  `(sort-by% ,sequence
+             ,@(mapcar (lambda (triplet)
+                         (cons 'list triplet))
+                       (cons arglist more-arglists))))
+
+(defun sort-by% (sequence &rest arglists)
+  (setf (cddar (last arglists))
+        (list (constantly nil)))
+  (sort sequence
+        (lambda (a b)
+          (loop :for (comp key eqtest) :in arglists
+                :for a-val := (funcall key a)
+                :for b-val := (funcall key b)
+                :unless (funcall eqtest a-val b-val)
+                  :return (funcall comp a-val b-val)))))
+
+(defun strcat (&rest things)
+  (with-output-to-string (out)
+    (dolist (thing things)
+      (princ thing out))))
