@@ -86,3 +86,9 @@ test of the last arglist is ignored."
   (with-output-to-string (out)
     (dolist (thing things)
       (princ thing out))))
+
+(defmacro doto (var form &body body)
+  "Binds VAR to FORM in BODY, returns value of VAR."
+  `(let ((,var ,form))
+     ,@body
+     ,var))

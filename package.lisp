@@ -9,6 +9,7 @@
         #:split-sequence)
   (:export #:array-flat-view
            #:defenum
+           #:doto
            #:dovector
            #:download
            #:factorize

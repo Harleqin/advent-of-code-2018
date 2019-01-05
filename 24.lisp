@@ -192,9 +192,8 @@
 (defun boosted-combat (boost groups)
   (let ((boosted-groups
           (mapcar (lambda (group)
-                    (let ((copy (copy-group group)))
+                    (doto copy (copy-group group)
                       (when (string= (group-side copy) "Immune System")
-                        (incf (group-attack-damage copy) boost))
-                      copy))
+                        (incf (group-attack-damage copy) boost))))
                   groups)))
     (combat boosted-groups)))
